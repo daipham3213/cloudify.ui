@@ -1,3 +1,3 @@
-const HandlePosition = ["top", "bottom", "left", "right"];
+const HandlePosition = ["top", "bottom"];
 
 export { HandlePosition };

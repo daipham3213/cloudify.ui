@@ -9,43 +9,78 @@
  */
 import React from "react";
 
-import { Handle } from "@xyflow/react";
-import { Box, styled } from "@mui/material";
-import { HandlePosition } from "../common/consts.js";
+import { Handle, Position, useStore, useUpdateNodeInternals } from "@xyflow/react";
+import styled from "styled-components";
 
-const HandleTypes = ["source", "target"];
 const StyledHandle = styled(Handle)`
-  background-color: ${props => props.theme.palette.primary.main};
-`
-const BaseNode = ({
-  toolbarVisible,
-  toolbarPosition,
-  children,
-  onEditClick,
-  onRemoveClick,
-  isConnectable,
-  sourcePosition,
-  targetPosition,
-  data,
-  handleComponent = StyledHandle,
-  ...props
-}) => {
-  const Handler = handleComponent;
-  const Handles = React.useMemo(
-    () =>
-      HandleTypes.map((type) =>
-        HandlePosition.map((p) => (
-          <Handler key={`${props.id}-${type}-${p}`} type={type} position={p} />
-        )),
-      ),
-    [],
-  );
-  return (
-    <Box position="relative" className="nopan selected selectable draggable">
-      <Box>{children}</Box>
-      <>{Handles}</>
-    </Box>
-  );
-};
+    min-width: 2px;
+    min-height: 2px;
+    width: 5px;
+    height: 5px;
+`;
 
+const BaseNode = React.memo(
+  ({
+     toolbarVisible,
+     toolbarPosition,
+     children,
+     onEditClick,
+     onRemoveClick,
+     isConnectable,
+     sourcePosition,
+     targetPosition,
+     data,
+     handleComponent = StyledHandle,
+     ...props
+   }) => {
+    const [edgeCount, setEdgeCount] = React.useState(0);
+    const updateNodeInternals = useUpdateNodeInternals();
+
+    const edges = useStore((state) => {
+      const eds = state.edges.filter((edge) => edge.target === props.id);
+      if (eds.length !== edgeCount) {
+        setEdgeCount(() => {
+          updateNodeInternals(props.id);
+          return eds.length;
+        });
+      }
+      return eds;
+    });
+    const Handler = handleComponent;
+    const nid = `in-${edges.length + 1}`;
+    return (
+      <div className="nopan selected selectable draggable">
+        <div>
+          {edges.map((edge, i) => (
+            <Handler
+              id={edge.targetHandle}
+              key={edge.id + edge.targetHandle}
+              type="target"
+              position={Position.Left}
+              style={{ top: i * 10 }}
+              isConnectable={false}
+            />
+          ))}
+          <Handler
+            id={nid}
+            key={nid}
+            type="target"
+            position={Position.Left}
+            style={{ top: edges.length * 10 }}
+            onConnect={(params) => console.log("handle onConnect", params)}
+            isConnectable={true}
+          />
+          {children}
+          <Handler
+            type="source"
+            position={Position.Right}
+            id="a"
+            style={{ top: 10, background: "#555" }}
+            isConnectable={isConnectable}
+          />
+        </div>
+      </div>
+    );
+  }
+);
 export { BaseNode };

@@ -7,3 +7,4 @@ export { Subnet } from "./subnet";
 export { Volume } from "./volume";
 export { SecurityGroup } from "./security-group";
 export { Keypair } from "./keypair";
+export { TypeMap } from "./type-map";
